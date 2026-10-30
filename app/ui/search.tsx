@@ -1,6 +1,5 @@
 
 'use client';
-
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import {
   useSearchParams,
@@ -22,6 +21,9 @@ export default function Search({
     console.log(`Searching... ${term}`);
 
     const params = new URLSearchParams(searchParams);
+
+    // Reset to page 1 when searching.
+    params.set('page', '1');
 
     if (term) {
       params.set('query', term);

@@ -80,16 +80,52 @@ async function seedInvoices() {
     );
   `;
 
+  // STEP 1: Remove existing duplicate invoices.
+  // Keep one record for each identical customer, amount, status and date.
+
+  await sql`
+    WITH ranked_invoices AS (
+      SELECT
+        id,
+        ROW_NUMBER() OVER (
+          PARTITION BY customer_id, amount, status, date
+          ORDER BY id
+        ) AS row_number
+      FROM invoices
+    )
+    DELETE FROM invoices
+    WHERE id IN (
+      SELECT id
+      FROM ranked_invoices
+      WHERE row_number > 1
+    );
+  `;
+
+  // STEP 2: Prevent identical invoices from being inserted again.
+
+  await sql`
+    CREATE UNIQUE INDEX IF NOT EXISTS invoices_no_duplicates
+    ON invoices (customer_id, amount, status, date);
+  `;
+
+  // STEP 3: Insert only invoices that do not already exist.
+
   for (const invoice of invoices) {
     await sql`
-      INSERT INTO invoices (customer_id, amount, status, date)
+      INSERT INTO invoices (
+        customer_id,
+        amount,
+        status,
+        date
+      )
       VALUES (
         ${invoice.customer_id},
         ${invoice.amount},
         ${invoice.status},
         ${invoice.date}
       )
-      ON CONFLICT (id) DO NOTHING;
+      ON CONFLICT (customer_id, amount, status, date)
+      DO NOTHING;
     `;
   }
 }
@@ -113,14 +149,13 @@ async function seedRevenue() {
 
 export async function GET() {
   try {
-    // Seed tables sequentially to reduce database concurrency.
     await seedUsers();
     await seedCustomers();
     await seedInvoices();
     await seedRevenue();
 
     return Response.json({
-      message: 'Database seeded successfully',
+      message: 'Database seeded successfully. Duplicate invoices removed.',
     });
   } catch (error) {
     console.error('Database seeding failed:', error);
