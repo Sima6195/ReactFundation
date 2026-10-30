@@ -163,6 +163,7 @@ export async function fetchInvoicesPages(query: string) {
   }
 }
 
+// Fetch Invoice By ID
 export async function fetchInvoiceById(id: string) {
   try {
     const data = await sql<InvoiceForm[]>`
@@ -179,6 +180,8 @@ export async function fetchInvoiceById(id: string) {
       ...invoice,
       amount: invoice.amount / 100,
     }));
+
+    console.log(invoice); // Invoice is an empty array []
 
     return invoice[0];
   } catch (error) {

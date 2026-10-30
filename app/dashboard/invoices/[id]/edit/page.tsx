@@ -2,6 +2,7 @@
 import Form from '@/app/ui/invoices/edit-form';
 import Breadcrumbs from '@/app/ui/invoices/breadcrumbs';
 import { fetchInvoiceById, fetchCustomers } from '@/app/lib/data';
+import { notFound } from 'next/navigation';
 
 export default async function Page(props: {
   params: Promise<{ id: string }>;
@@ -13,6 +14,10 @@ export default async function Page(props: {
     fetchInvoiceById(id),
     fetchCustomers(),
   ]);
+
+  if (!invoice) {
+    notFound();
+  }
 
   return (
     <main>
@@ -26,6 +31,7 @@ export default async function Page(props: {
           },
         ]}
       />
+
       <Form invoice={invoice} customers={customers} />
     </main>
   );
