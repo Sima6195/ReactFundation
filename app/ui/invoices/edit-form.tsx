@@ -1,4 +1,3 @@
-
 'use client';
 
 import { CustomerField, InvoiceForm } from '@/app/lib/definitions';
@@ -19,7 +18,10 @@ export default function EditInvoiceForm({
   invoice: InvoiceForm;
   customers: CustomerField[];
 }) {
-  const updateInvoiceWithId = updateInvoice.bind(null, invoice.id);
+  // Fixed: wrap updateInvoice so the form action returns void
+  const updateInvoiceWithId = async (formData: FormData): Promise<void> => {
+    await updateInvoice(invoice.id, formData);
+  };
 
   return (
     <form action={updateInvoiceWithId}>
