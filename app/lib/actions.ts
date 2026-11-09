@@ -160,3 +160,30 @@ export async function deleteInvoice(id: string) {
     throw new Error('Failed to Delete Invoice.');
   }
 }
+// DELETE CUSTOMER
+export async function deleteCustomer(id: string) {
+  try {
+    const result = await sql`
+      SELECT COUNT(*) AS count
+      FROM invoices
+      WHERE customer_id = ${id}
+    `;
+
+    if (Number(result[0].count) > 0) {
+      throw new Error(
+        'This customer has invoices and cannot be deleted.',
+      );
+    }
+
+    await sql`
+      DELETE FROM customers
+      WHERE id = ${id}
+    `;
+  } catch (error) {
+    console.error('Failed to delete customer:', error);
+    throw error;
+  }
+
+  revalidatePath('/dashboard/customers');
+  redirect('/dashboard/customers');
+}
