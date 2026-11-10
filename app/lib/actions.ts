@@ -1,3 +1,4 @@
+
 'use server';
 
 import { signIn } from '@/auth';
@@ -7,15 +8,23 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import postgres from 'postgres';
 
-
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
-// State type for form validation
+// State type for invoice form validation
 export type State = {
   errors?: {
     customerId?: string[];
     amount?: string[];
     status?: string[];
+  };
+  message?: string | null;
+};
+
+// State type for customer form validation
+export type CustomerState = {
+  errors?: {
+    name?: string[];
+    email?: string[];
   };
   message?: string | null;
 };
@@ -65,14 +74,12 @@ export async function createInvoice(
   prevState: State,
   formData: FormData,
 ): Promise<State> {
-  // Validate form fields using Zod
   const validatedFields = CreateInvoice.safeParse({
     customerId: formData.get('customerId'),
     amount: formData.get('amount'),
     status: formData.get('status'),
   });
 
-  // Return validation errors if fields are invalid
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
@@ -80,12 +87,10 @@ export async function createInvoice(
     };
   }
 
-  // Prepare data for database insertion
   const { customerId, amount, status } = validatedFields.data;
   const amountInCents = amount * 100;
   const date = new Date().toISOString().split('T')[0];
 
-  // Insert invoice into database
   try {
     await sql`
       INSERT INTO invoices (customer_id, amount, status, date)
@@ -105,14 +110,12 @@ export async function createInvoice(
 
 // Update Invoice
 export async function updateInvoice(id: string, formData: FormData) {
-  // Validate form fields using Zod
   const validatedFields = UpdateInvoice.safeParse({
     customerId: formData.get('customerId'),
     amount: formData.get('amount'),
     status: formData.get('status'),
   });
 
-  // Return validation errors if fields are invalid
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
@@ -120,11 +123,9 @@ export async function updateInvoice(id: string, formData: FormData) {
     };
   }
 
-  // Prepare data for database update
   const { customerId, amount, status } = validatedFields.data;
   const amountInCents = amount * 100;
 
-  // Update invoice in database
   try {
     await sql`
       UPDATE invoices
@@ -160,8 +161,93 @@ export async function deleteInvoice(id: string) {
     throw new Error('Failed to Delete Invoice.');
   }
 }
+
+// CUSTOMER VALIDATION
+const CustomerSchema = z.object({
+  name: z.string().trim().min(1, 'Please enter the customer name.'),
+  email: z.string().trim().email('Please enter a valid email address.'),
+});
+
+// CREATE CUSTOMER
+export async function createCustomer(
+  prevState: CustomerState,
+  formData: FormData,
+): Promise<CustomerState> {
+  const validatedFields = CustomerSchema.safeParse({
+    name: formData.get('name'),
+    email: formData.get('email'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Please correct the errors below.',
+    };
+  }
+
+  const { name, email } = validatedFields.data;
+
+  try {
+    await sql`
+      INSERT INTO customers (name, email, image_url)
+      VALUES (${name}, ${email}, '')
+    `;
+  } catch (error) {
+    console.error('Failed to create customer:', error);
+
+    return {
+      message: 'Database Error: Failed to create customer.',
+    };
+  }
+
+  revalidatePath('/dashboard/customers');
+  redirect('/dashboard/customers');
+}
+
+// UPDATE CUSTOMER
+export async function updateCustomer(
+  id: string,
+  prevState: CustomerState,
+  formData: FormData,
+): Promise<CustomerState> {
+  const validatedFields = CustomerSchema.safeParse({
+    name: formData.get('name'),
+    email: formData.get('email'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Please correct the errors below.',
+    };
+  }
+
+  const { name, email } = validatedFields.data;
+
+  try {
+    await sql`
+      UPDATE customers
+      SET name = ${name},
+          email = ${email}
+      WHERE id = ${id}
+    `;
+  } catch (error) {
+    console.error('Failed to update customer:', error);
+
+    return {
+      message: 'Database Error: Failed to update customer.',
+    };
+  }
+
+  revalidatePath('/dashboard/customers');
+  revalidatePath(`/dashboard/customers/${id}`);
+  redirect('/dashboard/customers');
+}
+
 // DELETE CUSTOMER
 export async function deleteCustomer(id: string) {
+  let hasInvoices = false;
+
   try {
     const result = await sql`
       SELECT COUNT(*) AS count
@@ -169,21 +255,25 @@ export async function deleteCustomer(id: string) {
       WHERE customer_id = ${id}
     `;
 
-    if (Number(result[0].count) > 0) {
-      throw new Error(
-        'This customer has invoices and cannot be deleted.',
-      );
-    }
+    hasInvoices = Number(result[0].count) > 0;
 
-    await sql`
-      DELETE FROM customers
-      WHERE id = ${id}
-    `;
+    if (!hasInvoices) {
+      await sql`
+        DELETE FROM customers
+        WHERE id = ${id}
+      `;
+    }
   } catch (error) {
     console.error('Failed to delete customer:', error);
-    throw error;
+
+    throw new Error('Failed to delete customer.');
   }
 
   revalidatePath('/dashboard/customers');
+
+  if (hasInvoices) {
+    redirect('/dashboard/customers?error=has-invoices');
+  }
+
   redirect('/dashboard/customers');
 }

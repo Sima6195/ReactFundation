@@ -1,6 +1,8 @@
 
+import { Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { PencilIcon } from '@heroicons/react/24/outline';
 import type { Metadata } from 'next';
 
 import Search from '@/app/ui/search';
@@ -67,7 +69,9 @@ export default async function Page(props: {
 
       {/* Search */}
       <div className="mb-6">
-        <Search placeholder="Search customers..." />
+        <Suspense>
+          <Search placeholder="Search customers..." />
+        </Suspense>
       </div>
 
       {/* Customer table */}
@@ -166,9 +170,10 @@ export default async function Page(props: {
 
                     <Link
                       href={`/dashboard/customers/${customer.id}/edit`}
-                      className="font-medium text-green-600 hover:underline"
+                      className="rounded-md border p-2 hover:bg-gray-100"
+                      title="Edit customer"
                     >
-                      Edit
+                      <PencilIcon className="w-5" />
                     </Link>
 
                     <DeleteCustomer id={customer.id} />

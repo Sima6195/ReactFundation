@@ -17,9 +17,10 @@ export default function DeleteCustomer({ id }: { id: string }) {
             event.preventDefault();
           }
         }}
-        className="text-red-500 hover:text-red-700"
+        className="rounded-md border p-2 hover:bg-gray-100"
       >
-        <TrashIcon className="h-5 w-5" />
+        <span className="sr-only">Delete</span>
+        <TrashIcon className="w-5" />
       </button>
     </form>
   );

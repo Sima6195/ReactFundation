@@ -3,7 +3,6 @@
 
 import Link from 'next/link';
 import { useActionState } from 'react';
-
 import {
   createCustomer,
   type CustomerState,
@@ -39,12 +38,8 @@ export default function CustomerForm({
 
   return (
     <form action={dispatch} className="space-y-5">
-
       <div>
-        <label
-          htmlFor="name"
-          className="mb-2 block text-sm font-medium"
-        >
+        <label htmlFor="name" className="mb-2 block text-sm font-medium">
           Customer Name
         </label>
 
@@ -55,7 +50,7 @@ export default function CustomerForm({
           defaultValue={customer?.name || ''}
           placeholder="Enter customer name"
           required
-          className="w-full rounded-md border border-gray-300 p-3 outline-none focus:border-blue-500"
+          className="w-full rounded-md border border-gray-300 p-3"
         />
 
         {state.errors?.name && (
@@ -66,10 +61,7 @@ export default function CustomerForm({
       </div>
 
       <div>
-        <label
-          htmlFor="email"
-          className="mb-2 block text-sm font-medium"
-        >
+        <label htmlFor="email" className="mb-2 block text-sm font-medium">
           Email Address
         </label>
 
@@ -80,7 +72,7 @@ export default function CustomerForm({
           defaultValue={customer?.email || ''}
           placeholder="Enter customer email"
           required
-          className="w-full rounded-md border border-gray-300 p-3 outline-none focus:border-blue-500"
+          className="w-full rounded-md border border-gray-300 p-3"
         />
 
         {state.errors?.email && (
@@ -91,9 +83,7 @@ export default function CustomerForm({
       </div>
 
       {state.message && (
-        <p className="text-sm text-red-500">
-          {state.message}
-        </p>
+        <p className="text-sm text-red-500">{state.message}</p>
       )}
 
       <div className="flex gap-3">
@@ -111,7 +101,7 @@ export default function CustomerForm({
 
         <Link
           href="/dashboard/customers"
-          className="rounded-md bg-gray-100 px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-200"
+          className="rounded-md bg-gray-100 px-5 py-3 text-sm font-medium text-gray-700"
         >
           Cancel
         </Link>

@@ -2,6 +2,7 @@
 import postgres from 'postgres';
 
 import {
+  Customer,
   CustomerField,
   CustomersTableType,
   InvoiceForm,
@@ -289,7 +290,10 @@ export async function fetchCustomers() {
 // Fetch Filtered Customers
 export async function fetchFilteredCustomers(
   query: string,
+  currentPage: number,
 ) {
+  const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+
   try {
     const data = await sql<CustomersTableType[]>`
       SELECT
@@ -332,6 +336,9 @@ export async function fetchFilteredCustomers(
         customers.image_url
 
       ORDER BY customers.name ASC
+
+      LIMIT ${ITEMS_PER_PAGE}
+      OFFSET ${offset}
     `;
 
     const customers = data.map((customer) => ({
@@ -351,6 +358,29 @@ export async function fetchFilteredCustomers(
     console.error('Database Error:', error);
 
     throw new Error('Failed to fetch customer table.');
+  }
+}
+
+// Fetch Customer By ID
+export async function fetchCustomerById(id: string) {
+  try {
+    const data = await sql<Customer[]>`
+      SELECT
+        id,
+        name,
+        email,
+        image_url
+
+      FROM customers
+
+      WHERE id = ${id}
+    `;
+
+    return data[0];
+  } catch (error) {
+    console.error('Database Error:', error);
+
+    throw new Error('Failed to fetch customer.');
   }
 }
 
