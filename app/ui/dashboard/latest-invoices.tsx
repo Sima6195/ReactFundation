@@ -30,13 +30,19 @@ export default async function LatestInvoices({
                 )}
               >
                 <div className="flex items-center">
-                  <Image
-                    src={invoice.image_url}
-                    alt={`${invoice.name}'s profile picture`}
-                    className="mr-4 rounded-full"
-                    width={32}
-                    height={32}
-                  />
+                  {invoice.image_url ? (
+                    <Image
+                      src={invoice.image_url}
+                      alt={`${invoice.name}'s profile picture`}
+                      className="mr-4 rounded-full"
+                      width={32}
+                      height={32}
+                    />
+                  ) : (
+                    <div className="mr-4 flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-700">
+                      {invoice.name?.charAt(0).toUpperCase()}
+                    </div>
+                  )}
 
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold md:text-base">

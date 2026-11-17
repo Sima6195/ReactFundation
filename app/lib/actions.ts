@@ -104,7 +104,9 @@ export async function createInvoice(
     };
   }
 
+  revalidatePath('/dashboard');
   revalidatePath('/dashboard/invoices');
+  revalidatePath('/dashboard/customers');
   redirect('/dashboard/invoices');
 }
 
@@ -142,7 +144,9 @@ export async function updateInvoice(id: string, formData: FormData) {
     };
   }
 
+  revalidatePath('/dashboard');
   revalidatePath('/dashboard/invoices');
+  revalidatePath('/dashboard/customers');
   redirect('/dashboard/invoices');
 }
 
@@ -154,7 +158,9 @@ export async function deleteInvoice(id: string) {
       WHERE id = ${id}
     `;
 
+    revalidatePath('/dashboard');
     revalidatePath('/dashboard/invoices');
+    revalidatePath('/dashboard/customers');
   } catch (error) {
     console.error('Database Error:', error);
 
@@ -200,7 +206,10 @@ export async function createCustomer(
     };
   }
 
+  revalidatePath('/dashboard');
   revalidatePath('/dashboard/customers');
+  revalidatePath('/dashboard/invoices/create');
+  revalidatePath('/dashboard/invoices');
   redirect('/dashboard/customers');
 }
 
@@ -239,8 +248,11 @@ export async function updateCustomer(
     };
   }
 
+  revalidatePath('/dashboard');
   revalidatePath('/dashboard/customers');
   revalidatePath(`/dashboard/customers/${id}`);
+  revalidatePath('/dashboard/invoices');
+  revalidatePath('/dashboard/invoices/create');
   redirect('/dashboard/customers');
 }
 
@@ -269,7 +281,10 @@ export async function deleteCustomer(id: string) {
     throw new Error('Failed to delete customer.');
   }
 
+  revalidatePath('/dashboard');
   revalidatePath('/dashboard/customers');
+  revalidatePath('/dashboard/invoices/create');
+  revalidatePath('/dashboard/invoices');
 
   if (hasInvoices) {
     redirect('/dashboard/customers?error=has-invoices');

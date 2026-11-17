@@ -11,6 +11,8 @@ import {
 } from '@/app/ui/skeletons';
 import { fetchLatestInvoices } from '@/app/lib/data';
 
+export const dynamic = 'force-dynamic';
+
 export default function Page() {
   return (
     <main>
